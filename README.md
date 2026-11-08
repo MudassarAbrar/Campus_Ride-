@@ -16,7 +16,6 @@
    - [Linux / Ubuntu Environment (Production/Lab)](#1-linux--ubuntu-setup-apache2--php--mysql)
    - [Windows Environment (XAMPP / WAMP)](#2-windows-setup-xampp)
 9. [Demonstration & Verification Script](#demonstration--verification-script)
-10. [Viva / Oral Examination Questions & Answers](#viva--oral-examination-qa)
 
 ---
 
@@ -397,25 +396,6 @@ Use this exact sequence for your video recording or laboratory viva demonstratio
 | **10. Transaction**  | Driver accepts request on `manage_requests.php` | Seats decrease from 2 to 1; request marked `accepted` | `SELECT FOR UPDATE` & ACID transaction |
 | **11. Logout**      | Click Logout button | Session destroyed, redirected to login | `session_destroy()`, cookie expiry |
 | **12. Git History** | Run `git log --oneline` | Clean history of incremental commits | Proper software development lifecycle |
-
----
-
-## Viva / Oral Examination Q&A
-
-**Q1: Why is password hashing preferred over symmetric encryption?**
-> *Answer:* Symmetric encryption is reversible with a secret key. If that key is compromised, every user password is exposed. Password hashing (`password_hash`) is a cryptographic one-way mathematical function that can never be reversed, protecting passwords even in database breaches.
-
-**Q2: What is the purpose of `session_regenerate_id(true)` during login?**
-> *Answer:* It mitigates **Session Fixation attacks**. When an unauthenticated user is issued a session ID, an attacker could attempt to fixate that ID. Regenerating the session ID upon successful credential validation destroys the old token and binds the authenticated session to a fresh ID.
-
-**Q3: How do prepared statements protect against SQL Injection?**
-> *Answer:* In raw string concatenation, malicious user input (e.g. `' OR '1'='1`) can alter the SQL syntax tree. Prepared statements pre-compile the SQL query structure on the database engine first. User data is then transmitted separately over the wire as pure parameter literals, rendering code execution via input impossible.
-
-**Q4: Why use database transactions when accepting a seat request?**
-> *Answer:* Accepting a seat involves two interdependent steps: updating the request status to `accepted` and decrementing `available_seats`. Wrapping both inside `mysqli_begin_transaction()` with `FOR UPDATE` prevents race conditions where multiple passengers might simultaneously claim the last remaining seat. If an error occurs, `mysqli_rollback()` restores data consistency.
-
-**Q5: What does `ON DELETE CASCADE` do on foreign keys?**
-> *Answer:* It preserves referential integrity. If a user record is deleted from the `users` table, MySQL automatically purges all related records in `vehicles`, `rides`, and `ride_requests`, preventing orphaned rows in the database.
 
 ---
 
