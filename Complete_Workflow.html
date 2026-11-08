@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusRide Animated Workflow and Architecture Explorer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #ffffff;
+    color: #0f172a;
+    line-height: 1.5;
+  }
+  .appWrapper {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #ffffff;
+  }
+  header.topHeader {
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+  }
+  .mainTitle {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+  }
+  .subTitleText {
+    font-size: 14px;
+    color: #475569;
+    margin-top: 4px;
+  }
+  .tabBar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 20px;
+  }
+  .tabItem {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tabItem:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  .tabItem.active {
+    background: #1e3a8a;
+    color: #ffffff;
+    border-color: #1e3a8a;
+  }
+  .tabSection {
+    display: none;
+    animation: fadeEffect 0.2s ease;
+  }
+  .tabSection.active {
+    display: block;
+  }
+  @keyframes fadeEffect {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .controlBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+  }
+  .ctrlBtn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .ctrlBtn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+  }
+  .ctrlBtnPrimary {
+    background: #1e3a8a;
+    color: #ffffff;
+    border-color: #1e3a8a;
+  }
+  .ctrlBtnPrimary:hover {
+    background: #1e40af;
+  }
+  .statusBadge {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 12px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+    border-radius: 20px;
+  }
+  .svgContainer {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  .diagramNode {
+    fill: #ffffff;
+    stroke: #94a3b8;
+    stroke-width: 1.5;
+    rx: 8;
+    ry: 8;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .diagramNode:hover {
+    stroke: #2563eb;
+    fill: #eff6ff;
+  }
+  .diagramNode.nodeActive {
+    stroke: #1e3a8a;
+    stroke-width: 3;
+    fill: #dbeafe;
+    filter: drop-shadow(0 2px 6px rgba(30, 58, 138, 0.25));
+  }
+  .nodeHeader {
+    font-size: 13px;
+    font-weight: 700;
+    fill: #0f172a;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  .nodeSub {
+    font-size: 11px;
+    fill: #475569;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  .pathTrack {
+    fill: none;
+    stroke: #cbd5e1;
+    stroke-width: 2.5;
+  }
+  .pathActive {
+    fill: none;
+    stroke: #2563eb;
+    stroke-width: 3;
+    stroke-dasharray: 6,4;
+    animation: flowPulse 1.2s linear infinite;
+  }
+  @keyframes flowPulse {
+    to { stroke-dashoffset: -20; }
+  }
+  .movingToken {
+    fill: #1e3a8a;
+    stroke: #ffffff;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.6));
+    transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .stepCardBox {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 5px solid #1e3a8a;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .stepCardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .stepCardTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .stepCardTag {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+  }
+  .cardGridThree {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .cardGridTwo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (max-width: 860px) {
+    .cardGridThree, .cardGridTwo { grid-template-columns: 1fr; }
+  }
+  .infoCard {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .infoCardTitle {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .infoCardValue {
+    font-size: 13.5px;
+    color: #1e293b;
+    font-weight: 600;
+  }
+  .chipRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+  }
+  .chipEmerald {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+  }
+  .chipAmber {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+  }
+  .compactTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .compactTable th {
+    background: #f1f5f9;
+    color: #0f172a;
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    font-weight: 700;
+  }
+  .compactTable td {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+  }
+  .compactTable tr:nth-child(even) {
+    background: #f8fafc;
+  }
+</style>
+</head>
+<body>
+
+<div class="appWrapper">
+  <header class="topHeader">
+    <div class="mainTitle">CampusRide Animated Workflow and Architecture Explorer</div>
+    <div class="subTitleText">Visual Workflow Playback, Step Control, and Zero Text Walls</div>
+  </header>
+
+  <nav class="tabBar" id="tabBar">
+    <button class="tabItem active" onclick="activateTab('tabMaster')">Master Workflow</button>
+    <button class="tabItem" onclick="activateTab('tabArchitecture')">System Architecture</button>
+    <button class="tabItem" onclick="activateTab('tabUserJourneys')">User Journeys</button>
+    <button class="tabItem" onclick="activateTab('tabDataPipeline')">Data Pipeline</button>
+    <button class="tabItem" onclick="activateTab('tabAuthSecurity')">Auth and Security</button>
+    <button class="tabItem" onclick="activateTab('tabPageMap')">Page Map Flow</button>
+  </nav>
+
+  <!-- TAB 1: MASTER WORKFLOW -->
+  <div id="tabMaster" class="tabSection active">
+    <div class="controlBar">
+      <button class="ctrlBtn ctrlBtnPrimary" id="btnPlayMaster" onclick="playerMaster.togglePlay()">Play Workflow</button>
+      <button class="ctrlBtn" onclick="playerMaster.stepNext()">Next Step</button>
+      <button class="ctrlBtn" onclick="playerMaster.reset()">Reset</button>
+      <button class="ctrlBtn" onclick="playerMaster.setSpeed(1)">Speed 1x</button>
+      <button class="ctrlBtn" onclick="playerMaster.setSpeed(2)">Speed 2x</button>
+      <div class="statusBadge" id="badgeMaster">Ready to Play</div>
+    </div>
+
+    <div class="svgContainer">
+      <svg id="svgMaster" width="1020" height="220" viewBox="0 0 1020 220">
+        <path d="M 90 85 L 250 85 L 410 85 L 570 85 L 730 85 L 890 85" class="pathTrack"/>
+        <path d="M 890 120 C 890 190, 570 190, 570 120" class="pathTrack"/>
+
+        <circle id="tokenMaster" cx="90" cy="85" r="9" class="movingToken"/>
+
+        <g id="masterNode0" onclick="playerMaster.jumpTo(0)">
+          <rect x="25" y="45" width="130" height="75" class="diagramNode nodeActive"/>
+          <text x="90" y="77" class="nodeHeader">1. Student Signup</text>
+          <text x="90" y="98" class="nodeSub">Account Creation</text>
+        </g>
+
+        <g id="masterNode1" onclick="playerMaster.jumpTo(1)">
+          <rect x="185" y="45" width="130" height="75" class="diagramNode"/>
+          <text x="250" y="77" class="nodeHeader">2. Add Vehicle</text>
+          <text x="250" y="98" class="nodeSub">Asset Profiling</text>
+        </g>
+
+        <g id="masterNode2" onclick="playerMaster.jumpTo(2)">
+          <rect x="345" y="45" width="130" height="75" class="diagramNode"/>
+          <text x="410" y="77" class="nodeHeader">3. Offer Ride</text>
+          <text x="410" y="98" class="nodeSub">Schedule Trip</text>
+        </g>
+
+        <g id="masterNode3" onclick="playerMaster.jumpTo(3)">
+          <rect x="505" y="45" width="130" height="75" class="diagramNode"/>
+          <text x="570" y="77" class="nodeHeader">4. Search Rides</text>
+          <text x="570" y="98" class="nodeSub">Filter and Pick</text>
+        </g>
+
+        <g id="masterNode4" onclick="playerMaster.jumpTo(4)">
+          <rect x="665" y="45" width="130" height="75" class="diagramNode"/>
+          <text x="730" y="77" class="nodeHeader">5. Book Seat</text>
+          <text x="730" y="98" class="nodeSub">Submit Request</text>
+        </g>
+
+        <g id="masterNode5" onclick="playerMaster.jumpTo(5)">
+          <rect x="825" y="45" width="130" height="75" class="diagramNode"/>
+          <text x="890" y="77" class="nodeHeader">6. Driver Action</text>
+          <text x="890" y="98" class="nodeSub">Lock and Update</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stepCardBox" id="cardMaster">
+      <div class="stepCardHeader">
+        <div class="stepCardTitle" id="titleMaster">Stage 1: Student Account Creation</div>
+        <div class="stepCardTag" id="tagMaster">signup.php and login.php</div>
+      </div>
+      <div class="cardGridThree">
+        <div class="infoCard">
+          <div class="infoCardTitle">User Action</div>
+          <div class="infoCardValue" id="actionMaster">Student enters institutional email, university ID, home location, and password.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">System Verification</div>
+          <div class="infoCardValue" id="ruleMaster">Checks unique email and ID, verifies 8 char minimum, hashes password with Bcrypt.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">Database Impact</div>
+          <div class="infoCardValue" id="dbMaster">INSERT INTO users with password hash; session_regenerate_id on login.</div>
+        </div>
+      </div>
+      <div class="chipRow" id="chipsMaster">
+        <span class="chip chipEmerald">Active Session</span>
+        <span class="chip">Zero Plaintext Passwords</span>
+        <span class="chip">Session Fixation Protected</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SYSTEM ARCHITECTURE -->
+  <div id="tabArchitecture" class="tabSection">
+    <div class="controlBar">
+      <button class="ctrlBtn ctrlBtnPrimary" id="btnPlayArch" onclick="playerArch.togglePlay()">Play Architecture Flow</button>
+      <button class="ctrlBtn" onclick="playerArch.stepNext()">Next Step</button>
+      <button class="ctrlBtn" onclick="playerArch.reset()">Reset</button>
+      <div class="statusBadge" id="badgeArch">Tier Ready</div>
+    </div>
+
+    <div class="svgContainer">
+      <svg id="svgArch" width="1020" height="230" viewBox="0 0 1020 230">
+        <path d="M 120 100 L 330 100 L 540 100 L 740 100 L 920 100" class="pathTrack"/>
+        <path d="M 920 130 L 120 130" class="pathTrack" stroke-dasharray="4,4"/>
+
+        <circle id="tokenArch" cx="120" cy="100" r="9" class="movingToken"/>
+
+        <g id="archNode0" onclick="playerArch.jumpTo(0)">
+          <rect x="50" y="55" width="140" height="85" class="diagramNode nodeActive"/>
+          <text x="120" y="90" class="nodeHeader">Client Browser</text>
+          <text x="120" y="112" class="nodeSub">HTML5 and Forms</text>
+        </g>
+
+        <g id="archNode1" onclick="playerArch.jumpTo(1)">
+          <rect x="260" y="55" width="140" height="85" class="diagramNode"/>
+          <text x="330" y="90" class="nodeHeader">auth.php Guard</text>
+          <text x="330" y="112" class="nodeSub">Session Gatekeeper</text>
+        </g>
+
+        <g id="archNode2" onclick="playerArch.jumpTo(2)">
+          <rect x="470" y="55" width="140" height="85" class="diagramNode"/>
+          <text x="540" y="90" class="nodeHeader">PHP Controller</text>
+          <text x="540" y="112" class="nodeSub">Sanitize and Bind</text>
+        </g>
+
+        <g id="archNode3" onclick="playerArch.jumpTo(3)">
+          <rect x="670" y="55" width="140" height="85" class="diagramNode"/>
+          <text x="740" y="90" class="nodeHeader">mysqli Client</text>
+          <text x="740" y="112" class="nodeSub">Prepared Execution</text>
+        </g>
+
+        <g id="archNode4" onclick="playerArch.jumpTo(4)">
+          <rect x="850" y="55" width="140" height="85" class="diagramNode"/>
+          <text x="920" y="90" class="nodeHeader">MySQL InnoDB</text>
+          <text x="920" y="112" class="nodeSub">ACID and FK Rules</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stepCardBox" id="cardArch">
+      <div class="stepCardHeader">
+        <div class="stepCardTitle" id="titleArch">Tier 1: Client Request Dispatch</div>
+        <div class="stepCardTag" id="tagArch">Presentation Layer</div>
+      </div>
+      <div class="cardGridTwo">
+        <div class="infoCard">
+          <div class="infoCardTitle">Mechanism</div>
+          <div class="infoCardValue" id="mechArch">Browser submits POST or GET payload along with session cookie header.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">Security Check</div>
+          <div class="infoCardValue" id="secArch">Client side DOM verification with show or hide password utility via vanilla JS.</div>
+        </div>
+      </div>
+      <div class="chipRow" id="chipsArch">
+        <span class="chip chipEmerald">Zero NPM Dependencies</span>
+        <span class="chip">Pure Native Web Tech</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: USER JOURNEYS -->
+  <div id="tabUserJourneys" class="tabSection">
+    <div class="controlBar">
+      <button class="ctrlBtn ctrlBtnPrimary" id="btnPlayJourney" onclick="playerJourney.togglePlay()">Play Journey Sync</button>
+      <button class="ctrlBtn" onclick="playerJourney.stepNext()">Next Step</button>
+      <button class="ctrlBtn" onclick="playerJourney.reset()">Reset</button>
+      <div class="statusBadge" id="badgeJourney">Journeys Aligned</div>
+    </div>
+
+    <div class="svgContainer">
+      <svg id="svgJourney" width="1020" height="240" viewBox="0 0 1020 240">
+        <!-- Driver track top -->
+        <text x="60" y="42" font-size="12" font-weight="800" fill="#1e3a8a">DRIVER TRACK</text>
+        <path d="M 180 65 L 420 65 L 700 65" class="pathTrack"/>
+
+        <!-- Passenger track bottom -->
+        <text x="60" y="152" font-size="12" font-weight="800" fill="#047857">PASSENGER TRACK</text>
+        <path d="M 180 175 L 420 175 L 700 175" class="pathTrack"/>
+
+        <!-- Sync line -->
+        <path d="M 700 65 L 890 120 L 700 175" class="pathTrack" stroke-dasharray="4,4"/>
+
+        <circle id="tokenJourney" cx="180" cy="65" r="9" class="movingToken"/>
+
+        <!-- Driver nodes -->
+        <g id="journeyNode0" onclick="playerJourney.jumpTo(0)">
+          <rect x="120" y="35" width="120" height="60" class="diagramNode nodeActive"/>
+          <text x="180" y="60" class="nodeHeader">1. Profile Vehicle</text>
+          <text x="180" y="78" class="nodeSub">Capacity Bound</text>
+        </g>
+
+        <g id="journeyNode1" onclick="playerJourney.jumpTo(1)">
+          <rect x="360" y="35" width="120" height="60" class="diagramNode"/>
+          <text x="420" y="60" class="nodeHeader">2. Post Ride</text>
+          <text x="420" y="78" class="nodeSub">Route and Time</text>
+        </g>
+
+        <!-- Passenger nodes -->
+        <g id="journeyNode2" onclick="playerJourney.jumpTo(2)">
+          <rect x="120" y="145" width="120" height="60" class="diagramNode"/>
+          <text x="180" y="170" class="nodeHeader">3. Search Ride</text>
+          <text x="180" y="188" class="nodeSub">Campus Match</text>
+        </g>
+
+        <g id="journeyNode3" onclick="playerJourney.jumpTo(3)">
+          <rect x="360" y="145" width="120" height="60" class="diagramNode"/>
+          <text x="420" y="170" class="nodeHeader">4. Request Seat</text>
+          <text x="420" y="188" class="nodeSub">Anti Self Check</text>
+        </g>
+
+        <!-- Meeting node -->
+        <g id="journeyNode4" onclick="playerJourney.jumpTo(4)">
+          <rect x="830" y="90" width="130" height="65" class="diagramNode"/>
+          <text x="895" y="117" class="nodeHeader">5. Driver Decision</text>
+          <text x="895" y="137" class="nodeSub">Lock and Finalize</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stepCardBox" id="cardJourney">
+      <div class="stepCardHeader">
+        <div class="stepCardTitle" id="titleJourney">Stage 1: Vehicle Asset Setup</div>
+        <div class="stepCardTag" id="tagJourney">add_vehicle.php</div>
+      </div>
+      <div class="cardGridTwo">
+        <div class="infoCard">
+          <div class="infoCardTitle">Driver Task</div>
+          <div class="infoCardValue" id="taskJourney">Registers vehicle model, registration string, and verified passenger limit.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">System Guard</div>
+          <div class="infoCardValue" id="guardJourney">Limits options to Bike, Motorcycle, Car; passenger capacity must exceed zero.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: DATA PIPELINE -->
+  <div id="tabDataPipeline" class="tabSection">
+    <div class="controlBar">
+      <button class="ctrlBtn ctrlBtnPrimary" id="btnPlayData" onclick="playerData.togglePlay()">Play Pipeline Flow</button>
+      <button class="ctrlBtn" onclick="playerData.stepNext()">Next Step</button>
+      <button class="ctrlBtn" onclick="playerData.reset()">Reset</button>
+      <div class="statusBadge" id="badgeData">Pipeline Clear</div>
+    </div>
+
+    <div class="svgContainer">
+      <svg id="svgData" width="1020" height="200" viewBox="0 0 1020 200">
+        <path d="M 100 95 L 300 95 L 510 95 L 720 95 L 920 95" class="pathTrack"/>
+        <circle id="tokenData" cx="100" cy="95" r="9" class="movingToken"/>
+
+        <g id="dataNode0" onclick="playerData.jumpTo(0)">
+          <rect x="35" y="55" width="130" height="80" class="diagramNode nodeActive"/>
+          <text x="100" y="88" class="nodeHeader">Input Capture</text>
+          <text x="100" y="108" class="nodeSub">POST and GET</text>
+        </g>
+
+        <g id="dataNode1" onclick="playerData.jumpTo(1)">
+          <rect x="235" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="300" y="88" class="nodeHeader">Sanitization</text>
+          <text x="300" y="108" class="nodeSub">Trim and Typecast</text>
+        </g>
+
+        <g id="dataNode2" onclick="playerData.jumpTo(2)">
+          <rect x="445" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="510" y="88" class="nodeHeader">Binding</text>
+          <text x="510" y="108" class="nodeSub">Prepared SQL</text>
+        </g>
+
+        <g id="dataNode3" onclick="playerData.jumpTo(3)">
+          <rect x="655" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="720" y="88" class="nodeHeader">InnoDB Lock</text>
+          <text x="720" y="108" class="nodeSub">FOR UPDATE</text>
+        </g>
+
+        <g id="dataNode4" onclick="playerData.jumpTo(4)">
+          <rect x="855" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="920" y="88" class="nodeHeader">Output Clean</text>
+          <text x="920" y="108" class="nodeSub">htmlspecialchars</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stepCardBox" id="cardData">
+      <div class="stepCardHeader">
+        <div class="stepCardTitle" id="titleData">Phase 1: Input Collection</div>
+        <div class="stepCardTag" id="tagData">HTTP Form Ingestion</div>
+      </div>
+      <div class="cardGridTwo">
+        <div class="infoCard">
+          <div class="infoCardTitle">Form Fields</div>
+          <div class="infoCardValue" id="fieldsData">Raw user parameters collected through HTTP request bodies and URL queries.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">Vulnerability Guard</div>
+          <div class="infoCardValue" id="vulnData">No raw superglobals are ever passed directly into database query builders.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: AUTH AND SECURITY -->
+  <div id="tabAuthSecurity" class="tabSection">
+    <div class="controlBar">
+      <button class="ctrlBtn ctrlBtnPrimary" id="btnPlayAuth" onclick="playerAuth.togglePlay()">Play Security Flow</button>
+      <button class="ctrlBtn" onclick="playerAuth.stepNext()">Next Step</button>
+      <button class="ctrlBtn" onclick="playerAuth.reset()">Reset</button>
+      <div class="statusBadge" id="badgeAuth">Shield Active</div>
+    </div>
+
+    <div class="svgContainer">
+      <svg id="svgAuth" width="1020" height="200" viewBox="0 0 1020 200">
+        <path d="M 100 95 L 300 95 L 510 95 L 720 95 L 920 95" class="pathTrack"/>
+        <circle id="tokenAuth" cx="100" cy="95" r="9" class="movingToken"/>
+
+        <g id="authNode0" onclick="playerAuth.jumpTo(0)">
+          <rect x="35" y="55" width="130" height="80" class="diagramNode nodeActive"/>
+          <text x="100" y="88" class="nodeHeader">1. Login Submit</text>
+          <text x="100" y="108" class="nodeSub">Email and Pass</text>
+        </g>
+
+        <g id="authNode1" onclick="playerAuth.jumpTo(1)">
+          <rect x="235" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="300" y="88" class="nodeHeader">2. Bcrypt Check</text>
+          <text x="300" y="108" class="nodeSub">password_verify</text>
+        </g>
+
+        <g id="authNode2" onclick="playerAuth.jumpTo(2)">
+          <rect x="445" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="510" y="88" class="nodeHeader">3. Regenerate ID</text>
+          <text x="510" y="108" class="nodeSub">Fixation Defense</text>
+        </g>
+
+        <g id="authNode3" onclick="playerAuth.jumpTo(3)">
+          <rect x="655" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="720" y="88" class="nodeHeader">4. Page Guard</text>
+          <text x="720" y="108" class="nodeSub">includes/auth.php</text>
+        </g>
+
+        <g id="authNode4" onclick="playerAuth.jumpTo(4)">
+          <rect x="855" y="55" width="130" height="80" class="diagramNode"/>
+          <text x="920" y="88" class="nodeHeader">5. Safe Logout</text>
+          <text x="920" y="108" class="nodeSub">Cookie Expire</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stepCardBox" id="cardAuth">
+      <div class="stepCardHeader">
+        <div class="stepCardTitle" id="titleAuth">Step 1: Credential Submission</div>
+        <div class="stepCardTag" id="tagAuth">login.php</div>
+      </div>
+      <div class="cardGridTwo">
+        <div class="infoCard">
+          <div class="infoCardTitle">Verification Mechanism</div>
+          <div class="infoCardValue" id="descAuth">Student submits email and password; server prepares query to fetch hash.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">Security Standard</div>
+          <div class="infoCardValue" id="stdAuth">Password hashing with PASSWORD_DEFAULT Bcrypt implementation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: PAGE MAP FLOW -->
+  <div id="tabPageMap" class="tabSection">
+    <div class="controlBar">
+      <button class="ctrlBtn ctrlBtnPrimary" id="btnPlayMap" onclick="playerMap.togglePlay()">Play Site Navigation</button>
+      <button class="ctrlBtn" onclick="playerMap.stepNext()">Next Step</button>
+      <button class="ctrlBtn" onclick="playerMap.reset()">Reset</button>
+      <div class="statusBadge" id="badgeMap">Route Clear</div>
+    </div>
+
+    <div class="svgContainer">
+      <svg id="svgMap" width="1020" height="240" viewBox="0 0 1020 240">
+        <path d="M 80 120 L 220 120 L 410 70 L 610 70 L 800 70 L 940 120" class="pathTrack"/>
+        <path d="M 220 120 L 410 170 L 610 170 L 800 170 L 940 120" class="pathTrack"/>
+
+        <circle id="tokenMap" cx="80" cy="120" r="9" class="movingToken"/>
+
+        <g id="mapNode0" onclick="playerMap.jumpTo(0)">
+          <rect x="20" y="90" width="120" height="60" class="diagramNode nodeActive"/>
+          <text x="80" y="116" class="nodeHeader">login.php</text>
+          <text x="80" y="134" class="nodeSub">Gate Entry</text>
+        </g>
+
+        <g id="mapNode1" onclick="playerMap.jumpTo(1)">
+          <rect x="160" y="90" width="120" height="60" class="diagramNode"/>
+          <text x="220" y="116" class="nodeHeader">index.php</text>
+          <text x="220" y="134" class="nodeSub">Dashboard</text>
+        </g>
+
+        <!-- Driver Upper Path -->
+        <g id="mapNode2" onclick="playerMap.jumpTo(2)">
+          <rect x="350" y="40" width="120" height="60" class="diagramNode"/>
+          <text x="410" y="66" class="nodeHeader">add_vehicle</text>
+          <text x="410" y="84" class="nodeSub">Register Car</text>
+        </g>
+
+        <g id="mapNode3" onclick="playerMap.jumpTo(3)">
+          <rect x="550" y="40" width="120" height="60" class="diagramNode"/>
+          <text x="610" y="66" class="nodeHeader">offer_ride</text>
+          <text x="610" y="84" class="nodeSub">Post Schedule</text>
+        </g>
+
+        <g id="mapNode4" onclick="playerMap.jumpTo(4)">
+          <rect x="740" y="40" width="120" height="60" class="diagramNode"/>
+          <text x="800" y="66" class="nodeHeader">manage_req</text>
+          <text x="800" y="84" class="nodeSub">Moderate</text>
+        </g>
+
+        <!-- Passenger Lower Path -->
+        <g id="mapNode5" onclick="playerMap.jumpTo(5)">
+          <rect x="350" y="140" width="120" height="60" class="diagramNode"/>
+          <text x="410" y="166" class="nodeHeader">search_rides</text>
+          <text x="410" y="184" class="nodeSub">Filter Active</text>
+        </g>
+
+        <g id="mapNode6" onclick="playerMap.jumpTo(6)">
+          <rect x="550" y="140" width="120" height="60" class="diagramNode"/>
+          <text x="610" y="166" class="nodeHeader">ride_details</text>
+          <text x="610" y="184" class="nodeSub">Seat Booking</text>
+        </g>
+
+        <g id="mapNode7" onclick="playerMap.jumpTo(7)">
+          <rect x="740" y="140" width="120" height="60" class="diagramNode"/>
+          <text x="800" y="166" class="nodeHeader">my_requests</text>
+          <text x="800" y="184" class="nodeSub">Track and Cancel</text>
+        </g>
+
+        <!-- Exit Node -->
+        <g id="mapNode8" onclick="playerMap.jumpTo(8)">
+          <rect x="880" y="90" width="120" height="60" class="diagramNode"/>
+          <text x="940" y="116" class="nodeHeader">logout.php</text>
+          <text x="940" y="134" class="nodeSub">Destroy Session</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="stepCardBox" id="cardMap">
+      <div class="stepCardHeader">
+        <div class="stepCardTitle" id="titleMap">Navigation Node: Entry Portal</div>
+        <div class="stepCardTag" id="tagMap">login.php</div>
+      </div>
+      <div class="cardGridTwo">
+        <div class="infoCard">
+          <div class="infoCardTitle">Route Direction</div>
+          <div class="infoCardValue" id="routeMap">Unauthenticated visitors land here; successful authentication routes to dashboard.</div>
+        </div>
+        <div class="infoCard">
+          <div class="infoCardTitle">Connected Files</div>
+          <div class="infoCardValue" id="linkMap">Connects to signup.php for new students, index.php upon valid credentials.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function activateTab(tabId) {
+    var tabs = document.querySelectorAll('.tabSection');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.remove('active');
+    }
+    var items = document.querySelectorAll('.tabItem');
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.remove('active');
+    }
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function createWorkflowPlayer(config) {
+    var currentStep = 0;
+    var isPlaying = false;
+    var timer = null;
+    var speedInterval = 2000;
+
+    function updateView() {
+      for (var i = 0; i < config.totalSteps; i++) {
+        var node = document.getElementById(config.nodePrefix + i);
+        if (node) {
+          var rect = node.querySelector('rect');
+          if (rect) {
+            if (i === currentStep) {
+              rect.classList.add('nodeActive');
+            } else {
+              rect.classList.remove('nodeActive');
+            }
+          }
+        }
+      }
+
+      var coords = config.waypoints[currentStep];
+      var token = document.getElementById(config.token);
+      if (token && coords) {
+        token.setAttribute('cx', coords.x);
+        token.setAttribute('cy', coords.y);
+      }
+
+      if (config.onStepChange) {
+        config.onStepChange(currentStep);
+      }
+
+      var badge = document.getElementById(config.badge);
+      if (badge) {
+        badge.innerText = 'Step ' + (currentStep + 1) + ' of ' + config.totalSteps;
+      }
+    }
+
+    function stepNext() {
+      currentStep = (currentStep + 1) % config.totalSteps;
+      updateView();
+    }
+
+    function togglePlay() {
+      var btn = document.getElementById(config.playBtn);
+      if (isPlaying) {
+        clearInterval(timer);
+        isPlaying = false;
+        if (btn) btn.innerText = 'Play Flow';
+      } else {
+        isPlaying = true;
+        if (btn) btn.innerText = 'Pause Flow';
+        timer = setInterval(function() {
+          currentStep = (currentStep + 1) % config.totalSteps;
+          updateView();
+        }, speedInterval);
+      }
+    }
+
+    function reset() {
+      if (isPlaying) togglePlay();
+      currentStep = 0;
+      updateView();
+    }
+
+    function jumpTo(index) {
+      currentStep = index;
+      updateView();
+    }
+
+    function setSpeed(factor) {
+      speedInterval = 2000 / factor;
+      if (isPlaying) {
+        clearInterval(timer);
+        timer = setInterval(function() {
+          currentStep = (currentStep + 1) % config.totalSteps;
+          updateView();
+        }, speedInterval);
+      }
+    }
+
+    return {
+      togglePlay: togglePlay,
+      stepNext: stepNext,
+      reset: reset,
+      jumpTo: jumpTo,
+      setSpeed: setSpeed,
+      init: updateView
+    };
+  }
+
+  /* PLAYER 1: MASTER */
+  var masterData = [
+    {
+      title: "Stage 1: Student Account Creation",
+      tag: "signup.php and login.php",
+      action: "Student enters institutional email, university ID, home location, and password.",
+      rule: "Checks unique email and ID, verifies 8 char minimum, hashes password with Bcrypt.",
+      db: "INSERT INTO users with password hash; session_regenerate_id on login.",
+      chips: ["Active Session", "Zero Plaintext Passwords", "Session Fixation Protected"]
+    },
+    {
+      title: "Stage 2: Vehicle Asset Profiling",
+      tag: "add_vehicle.php",
+      action: "Vehicle owner records vehicle type, name model, and passenger limit.",
+      rule: "Validates capacity > 0; restricts type to Bike, Motorcycle, Car.",
+      db: "INSERT INTO vehicles linked to user_id foreign key constraint.",
+      chips: ["Asset Linked", "Capacity Verified", "Owner Validated"]
+    },
+    {
+      title: "Stage 3: Ride Offer Scheduling",
+      tag: "offer_ride.php",
+      action: "Driver selects vehicle, schedules date time, pickup area, destination, and fare.",
+      rule: "Seats must not exceed vehicle capacity; departure date must not be in past.",
+      db: "INSERT INTO rides with available_seats initialized to total_seats.",
+      chips: ["Route Published", "Status Active", "Seats Bounded"]
+    },
+    {
+      title: "Stage 4: Search and Commuter Discovery",
+      tag: "search_rides.php",
+      action: "Passenger searches active rides by pickup area, destination, and departure date.",
+      rule: "Filters out past rides and trips with zero remaining seats.",
+      db: "SELECT joins rides, users, vehicles with composite index idx_rides_search.",
+      chips: ["Multi Parameter Filter", "Fast Indexed Search", "Active Only"]
+    },
+    {
+      title: "Stage 5: Seat Reservation Request",
+      tag: "ride_details.php",
+      action: "Passenger requests seat quantity, specifies pickup spot, and sends optional note.",
+      rule: "Anti self booking check; blocks duplicate pending or accepted requests.",
+      db: "INSERT INTO ride_requests with status set to pending.",
+      chips: ["Self Request Blocked", "Duplicate Prevention", "Status Pending"]
+    },
+    {
+      title: "Stage 6: Transactional Driver Decision",
+      tag: "manage_requests.php",
+      action: "Driver inspects passenger phone and note, choosing Accept or Reject.",
+      rule: "SELECT ... FOR UPDATE locks row; verifies seats remain before decrementing.",
+      db: "UPDATE ride_requests status; UPDATE rides available_seats in ACID transaction.",
+      chips: ["Row Locked", "Atomic Seat Reduction", "No Overselling"]
+    }
+  ];
+
+  var playerMaster = createWorkflowPlayer({
+    totalSteps: 6,
+    nodePrefix: 'masterNode',
+    token: 'tokenMaster',
+    playBtn: 'btnPlayMaster',
+    badge: 'badgeMaster',
+    waypoints: [
+      {x: 90, y: 85},
+      {x: 250, y: 85},
+      {x: 410, y: 85},
+      {x: 570, y: 85},
+      {x: 730, y: 85},
+      {x: 890, y: 85}
+    ],
+    onStepChange: function(idx) {
+      var item = masterData[idx];
+      document.getElementById('titleMaster').innerText = item.title;
+      document.getElementById('tagMaster').innerText = item.tag;
+      document.getElementById('actionMaster').innerText = item.action;
+      document.getElementById('ruleMaster').innerText = item.rule;
+      document.getElementById('dbMaster').innerText = item.db;
+      var chipHtml = '';
+      for (var c = 0; c < item.chips.length; c++) {
+        chipHtml += '<span class="chip chipEmerald">' + item.chips[c] + '</span> ';
+      }
+      document.getElementById('chipsMaster').innerHTML = chipHtml;
+    }
+  });
+
+  /* PLAYER 2: ARCHITECTURE */
+  var archData = [
+    {
+      title: "Tier 1: Client Request Dispatch",
+      tag: "Presentation Layer",
+      mech: "Browser submits POST or GET payload along with session cookie header.",
+      sec: "Client side DOM verification with show or hide password utility via vanilla JS."
+    },
+    {
+      title: "Tier 2: Central Session Gatekeeper",
+      tag: "includes/auth.php",
+      mech: "Intercepts request before page controller runs; inspects $_SESSION['user_id'].",
+      sec: "Instantly redirects unauthenticated guests back to login.php."
+    },
+    {
+      title: "Tier 3: PHP Business Logic Controller",
+      tag: "Application Core",
+      mech: "Trims inputs, validates formats, enforces business boundaries and seat calculations.",
+      sec: "Prepares statements using mysqli_prepare; parameterizes variables completely."
+    },
+    {
+      title: "Tier 4: Prepared Statement Execution",
+      tag: "Database Client Tier",
+      mech: "Binds parameters using explicit type tags (string, integer, double).",
+      sec: "Eliminates SQL injection by isolating SQL syntax from user data strings."
+    },
+    {
+      title: "Tier 5: Relational Storage and Atomicity",
+      tag: "MySQL InnoDB Engine",
+      mech: "Applies row level locking via SELECT ... FOR UPDATE and enforces foreign key integrity.",
+      sec: "Guarantees full ACID compliance during seat confirmations."
+    }
+  ];
+
+  var playerArch = createWorkflowPlayer({
+    totalSteps: 5,
+    nodePrefix: 'archNode',
+    token: 'tokenArch',
+    playBtn: 'btnPlayArch',
+    badge: 'badgeArch',
+    waypoints: [
+      {x: 120, y: 100},
+      {x: 330, y: 100},
+      {x: 540, y: 100},
+      {x: 740, y: 100},
+      {x: 920, y: 100}
+    ],
+    onStepChange: function(idx) {
+      var item = archData[idx];
+      document.getElementById('titleArch').innerText = item.title;
+      document.getElementById('tagArch').innerText = item.tag;
+      document.getElementById('mechArch').innerText = item.mech;
+      document.getElementById('secArch').innerText = item.sec;
+    }
+  });
+
+  /* PLAYER 3: USER JOURNEYS */
+  var journeyData = [
+    {
+      title: "Stage 1: Vehicle Asset Setup (Driver)",
+      tag: "add_vehicle.php",
+      task: "Driver registers vehicle model, registration string, and verified passenger limit.",
+      guard: "Limits options to Bike, Motorcycle, Car; passenger capacity must exceed zero."
+    },
+    {
+      title: "Stage 2: Ride Publishing (Driver)",
+      tag: "offer_ride.php",
+      task: "Driver schedules departure date, departure time, pickup zone, and destination.",
+      guard: "Enforces that seats do not exceed vehicle limit and date is in future."
+    },
+    {
+      title: "Stage 3: Commuter Search (Passenger)",
+      tag: "search_rides.php",
+      task: "Passenger queries rides departing to university campus on target date.",
+      guard: "Only displays active trips with seats remaining and future dates."
+    },
+    {
+      title: "Stage 4: Booking Submission (Passenger)",
+      tag: "ride_details.php",
+      task: "Passenger selects seat count and enters pickup location with custom note.",
+      guard: "Blocks driver from booking own ride; blocks duplicate active requests."
+    },
+    {
+      title: "Stage 5: Moderation and Convergence (Both)",
+      tag: "manage_requests.php",
+      task: "Driver reviews booking note and contact; accepts to decrement seats atomically.",
+      guard: "Passenger can cancel pending requests at any time prior to approval."
+    }
+  ];
+
+  var playerJourney = createWorkflowPlayer({
+    totalSteps: 5,
+    nodePrefix: 'journeyNode',
+    token: 'tokenJourney',
+    playBtn: 'btnPlayJourney',
+    badge: 'badgeJourney',
+    waypoints: [
+      {x: 180, y: 65},
+      {x: 420, y: 65},
+      {x: 180, y: 175},
+      {x: 420, y: 175},
+      {x: 895, y: 120}
+    ],
+    onStepChange: function(idx) {
+      var item = journeyData[idx];
+      document.getElementById('titleJourney').innerText = item.title;
+      document.getElementById('tagJourney').innerText = item.tag;
+      document.getElementById('taskJourney').innerText = item.task;
+      document.getElementById('guardJourney').innerText = item.guard;
+    }
+  });
+
+  /* PLAYER 4: DATA PIPELINE */
+  var dataItems = [
+    {
+      title: "Phase 1: Input Collection",
+      tag: "HTTP Form Ingestion",
+      fields: "Raw user parameters collected through HTTP request bodies and URL queries.",
+      vuln: "No raw superglobals are ever passed directly into database query builders."
+    },
+    {
+      title: "Phase 2: Sanitization and Normalization",
+      tag: "String and Numeric Casting",
+      fields: "trim() cleans strings; integers cast via (int); floats cast via (float).",
+      vuln: "Email validation executed via native filter_var FILTER_VALIDATE_EMAIL."
+    },
+    {
+      title: "Phase 3: Parameterized Binding",
+      tag: "mysqli_prepare and bind_param",
+      fields: "Query compiled by database engine prior to binding parameter data values.",
+      vuln: "Strict type strings (s, i, d) guarantee query structure cannot be altered."
+    },
+    {
+      title: "Phase 4: Concurrency Lock and ACID Commit",
+      tag: "InnoDB Row Level Lock",
+      fields: "mysqli_begin_transaction followed by SELECT ... FOR UPDATE on target ride.",
+      vuln: "Prevents race conditions when multiple passengers request the same seat."
+    },
+    {
+      title: "Phase 5: Output Encoding for Presentation",
+      tag: "HTML Entity Escaping",
+      fields: "Data retrieved from database passes through htmlspecialchars() before output.",
+      vuln: "Stops Cross Site Scripting attacks by encoding special markup characters."
+    }
+  ];
+
+  var playerData = createWorkflowPlayer({
+    totalSteps: 5,
+    nodePrefix: 'dataNode',
+    token: 'tokenData',
+    playBtn: 'btnPlayData',
+    badge: 'badgeData',
+    waypoints: [
+      {x: 100, y: 95},
+      {x: 300, y: 95},
+      {x: 510, y: 95},
+      {x: 720, y: 95},
+      {x: 920, y: 95}
+    ],
+    onStepChange: function(idx) {
+      var item = dataItems[idx];
+      document.getElementById('titleData').innerText = item.title;
+      document.getElementById('tagData').innerText = item.tag;
+      document.getElementById('fieldsData').innerText = item.fields;
+      document.getElementById('vulnData').innerText = item.vuln;
+    }
+  });
+
+  /* PLAYER 5: AUTH SECURITY */
+  var authItems = [
+    {
+      title: "Step 1: Credential Submission",
+      tag: "login.php",
+      desc: "Student submits email and password; server prepares query to fetch hash.",
+      std: "Password hashing with PASSWORD_DEFAULT Bcrypt implementation."
+    },
+    {
+      title: "Step 2: Password Verification",
+      tag: "password_verify",
+      desc: "Evaluates raw password against stored database hash in constant time.",
+      std: "Zero raw passwords or unsalted hashes stored anywhere in database."
+    },
+    {
+      title: "Step 3: Session ID Regeneration",
+      tag: "session_regenerate_id",
+      desc: "Issues fresh session identifier upon login and discards prior identifier.",
+      std: "Completely eliminates session fixation attacks."
+    },
+    {
+      title: "Step 4: Page Guard Enforcement",
+      tag: "includes/auth.php",
+      desc: "Included on all protected screens; checks session status and user ID.",
+      std: "Immediate redirect to login.php if session variable is missing."
+    },
+    {
+      title: "Step 5: Complete Session Teardown",
+      tag: "logout.php",
+      desc: "Wipes $_SESSION array, sets cookie expiry in past, and calls session_destroy.",
+      std: "Guarantees no orphaned credentials remain in client browser."
+    }
+  ];
+
+  var playerAuth = createWorkflowPlayer({
+    totalSteps: 5,
+    nodePrefix: 'authNode',
+    token: 'tokenAuth',
+    playBtn: 'btnPlayAuth',
+    badge: 'badgeAuth',
+    waypoints: [
+      {x: 100, y: 95},
+      {x: 300, y: 95},
+      {x: 510, y: 95},
+      {x: 720, y: 95},
+      {x: 920, y: 95}
+    ],
+    onStepChange: function(idx) {
+      var item = authItems[idx];
+      document.getElementById('titleAuth').innerText = item.title;
+      document.getElementById('tagAuth').innerText = item.tag;
+      document.getElementById('descAuth').innerText = item.desc;
+      document.getElementById('stdAuth').innerText = item.std;
+    }
+  });
+
+  /* PLAYER 6: PAGE MAP */
+  var mapItems = [
+    {
+      title: "Page Node 1: Entry Gate",
+      tag: "login.php",
+      route: "Unauthenticated visitors land here; successful authentication routes to dashboard.",
+      link: "Connects to signup.php for new students, index.php upon valid credentials."
+    },
+    {
+      title: "Page Node 2: Central Hub",
+      tag: "index.php",
+      route: "Main student dashboard showing quick search and active upcoming departures.",
+      link: "Connects to search_rides.php, offer_ride.php, and all management screens."
+    },
+    {
+      title: "Page Node 3: Vehicle Inventory (Driver)",
+      tag: "add_vehicle.php",
+      route: "Drivers register personal transport and review their vehicle capacity limits.",
+      link: "Prerequisite before visiting offer_ride.php."
+    },
+    {
+      title: "Page Node 4: Ride Scheduler (Driver)",
+      tag: "offer_ride.php",
+      route: "Driver publishes ride schedule, origin, campus destination, and available seats.",
+      link: "Pushes active record to database; viewable in my_rides.php."
+    },
+    {
+      title: "Page Node 5: Request Moderation (Driver)",
+      tag: "manage_requests.php",
+      route: "Driver approves or rejects incoming seat booking requests with row locking.",
+      link: "Accessed from my_rides.php dashboard counts."
+    },
+    {
+      title: "Page Node 6: Discovery Engine (Passenger)",
+      tag: "search_rides.php",
+      route: "Passengers filter rides by pickup location, campus destination, and date.",
+      link: "Results route directly to ride_details.php for chosen trip."
+    },
+    {
+      title: "Page Node 7: Booking Form (Passenger)",
+      tag: "ride_details.php",
+      route: "Displays driver phone, vehicle info, and handles seat booking submission.",
+      link: "Submits request into ride_requests table; redirects to tracking."
+    },
+    {
+      title: "Page Node 8: Request Tracker (Passenger)",
+      tag: "my_requests.php",
+      route: "Displays booking statuses (pending, accepted, rejected) with cancel option.",
+      link: "Provides self cancellation for pending requests."
+    },
+    {
+      title: "Page Node 9: Session Exit",
+      tag: "logout.php",
+      route: "Purges server session memory, expires cookies, and routes back to login.",
+      link: "Directs browser back to login.php."
+    }
+  ];
+
+  var playerMap = createWorkflowPlayer({
+    totalSteps: 9,
+    nodePrefix: 'mapNode',
+    token: 'tokenMap',
+    playBtn: 'btnPlayMap',
+    badge: 'badgeMap',
+    waypoints: [
+      {x: 80, y: 120},
+      {x: 220, y: 120},
+      {x: 410, y: 70},
+      {x: 610, y: 70},
+      {x: 800, y: 70},
+      {x: 410, y: 170},
+      {x: 610, y: 170},
+      {x: 800, y: 170},
+      {x: 940, y: 120}
+    ],
+    onStepChange: function(idx) {
+      var item = mapItems[idx];
+      document.getElementById('titleMap').innerText = item.title;
+      document.getElementById('tagMap').innerText = item.tag;
+      document.getElementById('routeMap').innerText = item.route;
+      document.getElementById('linkMap').innerText = item.link;
+    }
+  });
+
+  playerMaster.init();
+  playerArch.init();
+  playerJourney.init();
+  playerData.init();
+  playerAuth.init();
+  playerMap.init();
+</script>
+</body>
+</html>
